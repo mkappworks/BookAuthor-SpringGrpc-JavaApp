@@ -11,7 +11,7 @@ import java.util.List;
 
 @GrpcService
 public class BookAuthorServerService extends BookAuthorServiceGrpc.BookAuthorServiceImplBase {
-    public static List<Author> getAuthorsFromTempDb() {
+    private static List<Author> getAuthorsFromTempDb() {
         return new ArrayList<>() {
             {
                 add(Author.newBuilder().setAuthorId(1).setBookId(1).setFirstName("Charles").setLastName("Dickens").setGender("male").build());
@@ -22,7 +22,7 @@ public class BookAuthorServerService extends BookAuthorServiceGrpc.BookAuthorSer
         };
     }
 
-    public static List<Book> getBooksFromTempDb() {
+    private static List<Book> getBooksFromTempDb() {
         return new ArrayList<>() {
             {
                 add(Book.newBuilder().setBookId(1).setAuthorId(1).setTitle("Oliver Twist").setPrice(123.3f).setPages(100).build());
@@ -86,4 +86,29 @@ public class BookAuthorServerService extends BookAuthorServiceGrpc.BookAuthorSer
         };
     }
 
+    @Override
+    public StreamObserver<Book> getBooksByGender(StreamObserver<Book> responseObserver) {
+        return new StreamObserver<>() {
+            final List<Book> books = new ArrayList<>();
+
+            @Override
+            public void onNext(Book book) {
+                getBooksFromTempDb()
+                        .stream()
+                        .filter(bookFromDb -> bookFromDb.getAuthorId() == book.getAuthorId())
+                        .forEach(books::add);
+            }
+
+            @Override
+            public void onError(Throwable throwable) {
+                responseObserver.onError(throwable);
+            }
+
+            @Override
+            public void onCompleted() {
+                books.forEach(responseObserver::onNext);
+                responseObserver.onCompleted();
+            }
+        };
+    }
 }

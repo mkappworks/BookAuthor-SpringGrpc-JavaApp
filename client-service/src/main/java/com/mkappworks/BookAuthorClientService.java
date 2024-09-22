@@ -21,7 +21,18 @@ public class BookAuthorClientService {
     @GrpcClient("grpc-service")
     BookAuthorServiceGrpc.BookAuthorServiceStub asynchronousClient;
 
-    public static List<Book> getBooksFromTempDb() {
+    private static List<Author> getAuthorsFromTempDb() {
+        return new ArrayList<>() {
+            {
+                add(Author.newBuilder().setAuthorId(1).setBookId(1).setFirstName("Charles").setLastName("Dickens").setGender("male").build());
+                add(Author.newBuilder().setAuthorId(2).setFirstName("William").setLastName("Shakespeare").setGender("male").build());
+                add(Author.newBuilder().setAuthorId(3).setFirstName("JK").setLastName("Rowling").setGender("female").build());
+                add(Author.newBuilder().setAuthorId(4).setFirstName("Virginia").setLastName("Woolf").setGender("female").build());
+            }
+        };
+    }
+
+    private static List<Book> getBooksFromTempDb() {
         return new ArrayList<>() {
             {
                 add(Book.newBuilder().setBookId(1).setAuthorId(1).setTitle("Oliver Twist").setPrice(123.3f).setPages(100).build());
@@ -44,10 +55,11 @@ public class BookAuthorClientService {
 
     public List<Map<Descriptors.FieldDescriptor, Object>> getBooksByAuthor(int authorId) throws InterruptedException {
         final CountDownLatch countDownLatch = new CountDownLatch(1);
+
         Author authorRequest = Author.newBuilder().setAuthorId(authorId).build();
         final List<Map<Descriptors.FieldDescriptor, Object>> response = new ArrayList<>();
 
-        asynchronousClient.getBooksByAuthor(authorRequest, new StreamObserver<Book>() {
+        asynchronousClient.getBooksByAuthor(authorRequest, new StreamObserver<>() {
             @Override
             public void onNext(Book book) {
                 response.add(book.getAllFields());
@@ -70,9 +82,11 @@ public class BookAuthorClientService {
 
     public Map<String, Map<Descriptors.FieldDescriptor, Object>> getExpensiveBook() throws InterruptedException {
         final CountDownLatch countDownLatch = new CountDownLatch(1);
+
         final Map<String, Map<Descriptors.FieldDescriptor, Object>> response = new HashMap<>();
+
         StreamObserver<Book> responseObserver = asynchronousClient.getExpensiveBook(
-                new StreamObserver<Book>() {
+                new StreamObserver<>() {
                     @Override
                     public void onNext(Book book) {
                         response.put("ExpensiveBook", book.getAllFields());
@@ -97,5 +111,44 @@ public class BookAuthorClientService {
 
         boolean await = countDownLatch.await(1, TimeUnit.MINUTES);
         return await ? response : Collections.emptyMap();
+    }
+
+    public List<Map<Descriptors.FieldDescriptor, Object>> getBooksByAuthorGender(String gender) throws InterruptedException {
+        final CountDownLatch countDownLatch = new CountDownLatch(1);
+
+        final List<Map<Descriptors.FieldDescriptor, Object>> response = new ArrayList<>();
+
+        StreamObserver<Book> responseObserver = asynchronousClient.getBooksByGender(
+                new StreamObserver<>() {
+                    @Override
+                    public void onNext(Book book) {
+                        response.add(book.getAllFields());
+                    }
+
+                    @Override
+                    public void onError(Throwable throwable) {
+                        countDownLatch.countDown();
+                    }
+
+                    @Override
+                    public void onCompleted() {
+                        countDownLatch.countDown();
+                    }
+                }
+        );
+
+        getAuthorsFromTempDb()
+                .stream()
+                .filter(author -> author.getGender().equals(gender))
+                .forEach(author -> responseObserver.onNext(
+                        Book.newBuilder()
+                                .setAuthorId(author.getAuthorId())
+                                .build()
+                ));
+
+        responseObserver.onCompleted();
+
+        boolean await = countDownLatch.await(1, TimeUnit.MINUTES);
+        return await ? response : Collections.emptyList();
     }
 }

@@ -21,7 +21,6 @@ message Author {
 }
 
 service BookAuthorService {
-
   //unary - Synchronous
   //client will send one request and server will respond with one response.
   rpc getAuthor(Author) returns(Author){}
@@ -34,7 +33,7 @@ service BookAuthorService {
   //client will stream of request and server will respond with one response.
   rpc getExpensiveBook(stream Book) returns(Book){}
 
-  //  //bi-directional streaming - Asynchronous
-  //  //client will send stream of request and server will respond with stream of response.
-  //  rpc getBooksByGender(stream Book) returns (stream Book) {}
+  //bi-directional streaming - Asynchronous
+  //client will send stream of request and server will respond with stream of response.
+  rpc getBooksByGender(stream Book) returns (stream Book) {}
 }
