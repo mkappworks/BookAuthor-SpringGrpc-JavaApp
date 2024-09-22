@@ -24,4 +24,9 @@ public class BookAuthorController {
     public List<Map<Descriptors.FieldDescriptor, Object>> getBooksByAuthor(@PathVariable String authorId) throws InterruptedException {
         return bookAuthorClientService.getBooksByAuthor(Integer.parseInt(authorId));
     }
+
+    @GetMapping("/book")
+    public Map<String, Map<Descriptors.FieldDescriptor, Object>> getExpensiveBook() throws InterruptedException {
+        return bookAuthorClientService.getExpensiveBook();
+    }
 }
