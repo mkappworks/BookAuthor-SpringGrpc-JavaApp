@@ -18,6 +18,7 @@
 
     <modules>
         <module>proto</module>
+        <module>grpc-service</module>
     </modules>
 
     <properties>
