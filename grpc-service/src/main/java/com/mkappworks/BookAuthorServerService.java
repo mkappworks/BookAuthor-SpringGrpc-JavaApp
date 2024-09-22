@@ -12,7 +12,7 @@ import java.util.List;
 @GrpcService
 public class BookAuthorServerService extends BookAuthorServiceGrpc.BookAuthorServiceImplBase {
     public static List<Author> getAuthorsFromTempDb() {
-        return new ArrayList<Author>() {
+        return new ArrayList<>() {
             {
                 add(Author.newBuilder().setAuthorId(1).setBookId(1).setFirstName("Charles").setLastName("Dickens").setGender("male").build());
                 add(Author.newBuilder().setAuthorId(2).setFirstName("William").setLastName("Shakespeare").setGender("male").build());
@@ -23,7 +23,7 @@ public class BookAuthorServerService extends BookAuthorServiceGrpc.BookAuthorSer
     }
 
     public static List<Book> getBooksFromTempDb() {
-        return new ArrayList<Book>() {
+        return new ArrayList<>() {
             {
                 add(Book.newBuilder().setBookId(1).setAuthorId(1).setTitle("Oliver Twist").setPrice(123.3f).setPages(100).build());
                 add(Book.newBuilder().setBookId(2).setAuthorId(1).setTitle("A Christmas Carol").setPrice(223.3f).setPages(150).build());
